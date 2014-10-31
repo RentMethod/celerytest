@@ -1,0 +1,2 @@
+include AUTHORS README README.md INSTALL LICENSE
+recursive-include celerytest *.py

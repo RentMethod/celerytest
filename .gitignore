@@ -1,0 +1,8 @@
+# /
+*.pyc
+.DS_Store
+dist/
+*.egg-info
+doc/__build/*
+build/
+.build/
