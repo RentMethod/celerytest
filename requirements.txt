@@ -1,0 +1,2 @@
+celery==3.0.19
+python-memcached==1.48

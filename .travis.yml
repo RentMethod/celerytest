@@ -1,0 +1,5 @@
+language: python
+services:
+  - memcached
+install: "pip install -r requirements.txt"
+script: ./setup.py test
