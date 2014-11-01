@@ -1,5 +1,6 @@
 import threading
 import socket
+from datetime import datetime
 from celery import signals, states
 
 class CeleryWorkerThread(threading.Thread):
@@ -38,13 +39,18 @@ class CeleryWorkerThread(threading.Thread):
         worker.run()
 
     def stop(self):
-        self.monitor.shutdown()
+        self.monitor.stop()
         
         for w in self.workers:
             w.terminate()
         
         signals.worker_init.disconnect(self.on_worker_init)
         signals.worker_ready.disconnect(self.on_worker_ready)
+
+    def join(self, *args, **kwargs):
+        self.monitor.join(*args, **kwargs)
+        super(CeleryWorkerThread, self).join(*args, **kwargs)
+
 
 class CeleryMonitorThread(threading.Thread):
     '''
@@ -57,7 +63,7 @@ class CeleryMonitorThread(threading.Thread):
 
         self.app = app
         self.state = app.events.State()
-        self.stop = False
+        self.stop_requested = False
 
         self.pending = 0
         self.idle = threading.Event()
@@ -67,18 +73,14 @@ class CeleryMonitorThread(threading.Thread):
     def on_event(self, event):
         # maintain state
         self.state.event(event)
-        
-        # keep track of active task count
-        if event['type'] == 'task-received':
-            self.pending += 1
-        elif event['type'] in ['task-succeeded','task-failed','task-revoked']:
-            self.pending -= 1
-        
-        active = self.pending > 0
-        # we might become inactive with tasks scheduled in future
-        if event['type'] == 'worker-heartbeat' and event.get('active',-1) == 0:
-            active = False
 
+        # only need to update state when something relevant to pending tasks is happening
+        check_states = ['task-received','task-started','task-succeeded','task-failed','task-revoked']
+        if not event['type'] in check_states:
+            return
+
+        active = len(self.immediate_pending_tasks) > 0
+        
         # switch signals if needed
         if active and self.idle.is_set():
             self.idle.clear()
@@ -92,6 +94,11 @@ class CeleryMonitorThread(threading.Thread):
         tasks = self.state.tasks.values()
         return [t for t in tasks if t.state in states.UNREADY_STATES]
 
+    @property
+    def immediate_pending_tasks(self):
+        now = datetime.utcnow().isoformat()
+        return [t for t in self.pending_tasks if not t.eta or t.eta < now]
+
     def run(self):
         with self.app.connection() as connection:
             recv = self.app.events.Receiver(connection, handlers={
@@ -99,14 +106,12 @@ class CeleryMonitorThread(threading.Thread):
             })
 
             # we want to be able to stop from outside
-            while not self.stop:
+            while not self.stop_requested:
                 try:
                     # use timeout so we can monitor if we should stop
-                    recv.capture(limit=None, timeout=.2, wakeup=True)
+                    recv.capture(limit=None, timeout=.5, wakeup=False)
                 except socket.timeout:
                     pass
 
-    def shutdown(self):
-        self.stop = True
-        self.join()
-                
+    def stop(self):
+        self.stop_requested = True

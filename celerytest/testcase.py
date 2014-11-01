@@ -32,4 +32,4 @@ class CeleryTestCaseMixin(object):
 
     def tearDown(self):
         if not getattr(self, 'shared_worker', False):
-            self.start_worker().stop()
+            self.worker.stop()

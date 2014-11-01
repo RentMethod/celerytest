@@ -1,5 +1,7 @@
 language: python
 services:
   - memcached
-install: "pip install -r requirements.txt"
-script: ./setup.py test
+install: 
+  - pip install -r requirements.txt
+  - pip install nose
+script: nosetests
