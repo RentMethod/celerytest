@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/RentMethod/celerytest.svg?branch=master)](https://travis-ci.org/RentMethod/celerytest)
+
 # celerytest - Integration testing with Celery
 Writing (integration) tests that depend on Celery tasks is problematic. When you manually run a Celery worker together with your tests, it runs in a separate process and there's no clean way to address objects targeted by Celery from your tests. When you use a separate test database (as with Django for example), you'll have to duplicate configuration code so your Celery worker accesses the same database.
 
