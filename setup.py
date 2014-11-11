@@ -24,7 +24,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'celery==3.0.19'
+        'celery>=3.0.19'
     ],
     test_suite='celerytest.tests'
 )

@@ -1,2 +1,3 @@
-celery==3.0.19
-python-memcached==1.48
+celery>=3.0.19
+python-memcached>=1.48
+threadpool>=1.2.7

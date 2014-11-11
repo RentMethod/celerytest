@@ -25,6 +25,7 @@ class CeleryTestCaseMixin(object):
     @classmethod
     def teardown_class(cls):
         cls.worker.stop()
+        cls.worker.join()
 
     def setUp(self):
         if not getattr(self, 'shared_worker', False):

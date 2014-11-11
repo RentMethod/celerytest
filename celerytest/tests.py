@@ -25,7 +25,7 @@ class WorkerThreadTestCase(CeleryTestCaseMixin, TestCase):
     
     delay = .1
     overhead_time = 0.05
-
+    
     def test_sequential(self):
         x, base, pwr = 1, 2, 5
         for i in range(0,pwr):
@@ -35,6 +35,7 @@ class WorkerThreadTestCase(CeleryTestCaseMixin, TestCase):
             t2 = time.time()
             self.worker.idle.wait()
             t3 = time.time()
+            self.assertTrue(result.ready())
             x = result.get()
             self.assertEqual(x, pow(base,i+1))
             t4 = time.time()
@@ -47,7 +48,7 @@ class WorkerThreadTestCase(CeleryTestCaseMixin, TestCase):
             self.assertTrue(t4-t3 < self.overhead_time)
 
         self.assertEqual(x, pow(base,pwr))
-
+    
     def test_parallel(self):
         count = self.celery_concurrency
         results = [wait_a_second.delay(self.delay) for i in range(0,count)]

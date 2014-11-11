@@ -15,6 +15,7 @@ class CeleryWorkerThread(threading.Thread):
 
         self.app = app
         self.workers = []
+        self.consumers = []
         self.monitor = CeleryMonitorThread(app)
 
         self.ready = threading.Event()
@@ -27,6 +28,8 @@ class CeleryWorkerThread(threading.Thread):
     def on_worker_ready(self, sender=None, **kwargs):
         if not self.ready.is_set():
             self.ready.set()
+
+        self.consumers.append(sender)
         
     def run(self):
         signals.worker_init.connect(self.on_worker_init)
@@ -36,10 +39,18 @@ class CeleryWorkerThread(threading.Thread):
         self.monitor.start()
 
         worker = self.app.Worker()
-        worker.run()
+        if hasattr(worker, 'start'):
+            worker.start()
+        elif hasattr(worker, 'run'):
+            worker.run()
+        else:
+            raise Exception("Don't know how to start worker. Incompatible Celery?")
 
     def stop(self):
         self.monitor.stop()
+
+        for c in self.consumers:
+            c.stop()
         
         for w in self.workers:
             w.terminate()
