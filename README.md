@@ -57,10 +57,15 @@ class SomeTestCase(CeleryTestCaseMixin, TestCase):
 To automatically launch a worker in the background while running a Lettuce integration test suite, add to ``terrain.py``:
 
 ```python
+# my_celery_app.py
+app = Celery('my_celery_app', broker='amqp://')
+
 # terrain.py
 from lettuce import *
 from celerytest import start_celery_worker
-from app import app
+
+# replace this with an import of your actual app
+from my_celery_app import app
 
 @before.harvest
 def initial_setup(server):
