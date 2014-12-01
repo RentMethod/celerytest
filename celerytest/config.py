@@ -18,8 +18,3 @@ class CELERY_TEST_CONFIG_AMQP(object):
     CELERY_DEFAULT_EXCHANGE = 'test_default'
     CELERY_RESULT_EXCHANGE = 'test_celeryresults'
     CELERY_BROADCAST_QUEUE = 'test_celeryctl'
-
-CELERY_TEST_BACKEND_CONFIG = {
-    'memory': CELERY_TEST_CONFIG_MEMORY,
-    'amqp': CELERY_TEST_CONFIG_AMQP
-}
